@@ -1,7 +1,14 @@
-dictionary = File.open("dictionary.txt", "r")
-dictionary_contents = File.read("dictionary.txt")
+module Dictionary
+  File.open('dictionary.txt', 'r')
+  dictionary_content = File.read('dictionary.txt')
+  WORDS = dictionary_content.split(' ').select { |word| word.length >= 5 && word.length <= 12}
+end
 
-# Select a word between 5 and 12 characters
-word = dictionary_contents.split(' ').select { |word| word.length >= 5 && word.length <= 12}.sample
+class Board
+  include Dictionary
+  attr_accessor :secret_word
 
-puts word
+  def initialize
+    @secret_word = WORDS.sample
+  end
+end
