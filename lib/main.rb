@@ -53,8 +53,18 @@ class Player
       current_guess = gets.chomp.downcase
     end
 
-    guessed_letters.push(current_guess)
-    self.guess = current_guess
+    current_guess
+  end
+
+  def duplicate_check(current_guess)
+    duplicate = false
+    if !self.guessed_letters.include?(current_guess)
+      guessed_letters.push(current_guess)
+      self.guess = current_guess
+    else
+      duplicate = true
+    end
+    duplicate
   end
 end
 
@@ -88,7 +98,11 @@ class Game
     
     until game_over_check == true
       puts "Letters guessed so far: #{player.guessed_letters}\n\n"
-      player.make_guess
+      if player.duplicate_check(player.make_guess)
+        puts "Letter already guessed.\n\n"
+        board.print
+        next
+      end
       board.guess_check(player.guess)
       board.print
     end
