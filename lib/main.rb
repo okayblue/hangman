@@ -1,3 +1,5 @@
+require 'yaml'
+
 module Dictionary
   File.open('dictionary.txt', 'r')
   dictionary_content = File.read('dictionary.txt')
@@ -81,7 +83,7 @@ class Game
       puts "You ran out of guesses. The word was #{board.secret_word}"
       game_over = true
     elsif board.hint.join('') == board.secret_word
-      puts "You win lol"
+      puts "You win!"
       game_over = true
     end
     game_over
@@ -89,8 +91,18 @@ class Game
 
   def instructions
     puts "Welcome to hangman! Guess the letters, it's game over if you get 6 wrong letters."
+    puts "Also, type Save to save your game, or Load to load a game."
     board.initial_hint
     board.print
+  end
+
+  def save_game
+    File.open("saved_game.yml", 'w') { |f| f.write(YAML.dump(self))}
+  end
+
+  def load_game
+    yaml = YAML.safe_load_file('./saved_game.yml', permitted_classes: [Ggame])
+    player.guess = yaml.guess
   end
 
   def play
