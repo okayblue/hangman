@@ -101,8 +101,7 @@ class Game
   end
 
   def load_game
-    yaml = YAML.safe_load_file('./saved_game.yml', permitted_classes: [Ggame])
-    player.guess = yaml.guess
+    yaml = YAML.safe_load_file('./saved_game.yml', permitted_classes: [Game])
   end
 
   def play
