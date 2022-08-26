@@ -6,11 +6,14 @@ module Dictionary
   WORDS = dictionary_content.split(' ').select { |word| word.length >= 5 && word.length <= 12}
 end
 
-class Board
+class Game
   include Dictionary
-  attr_accessor :secret_word, :hint, :incorrect_guesses, :print
-
+  attr_reader :secret_word, :player, :board, :guessed_letters, :hint, :print
+  attr_accessor :guess, :incorrect_guesses
+  
   def initialize
+    @guess = ''
+    @guessed_letters = []
     @secret_word = WORDS.sample
     @hint = []
     @incorrect_guesses = 0
@@ -37,24 +40,22 @@ class Board
       self.incorrect_guesses += 1
     end
   end
-end
-
-class Player
-  attr_accessor :guessed_letters, :guess
-
-  def initialize
-    @guess = ''
-    @guessed_letters = []
-  end
 
   def make_guess
     puts 'Guess a letter:'
     current_guess = ''
-
-    until current_guess.match /\A[a-zA-Z'-]{1}\z/
+    
+    until current_guess.match /\A[a-zA-Z'-]{1}\z/ || current_guess.downcase == 'save'
       current_guess = gets.chomp.downcase
+      if current_guess.downcase == 'save'
+        puts "Game saved!"
+        save_game
+        next
+      elsif current_guess.downcase == 'exit'
+        puts "Thanks for playing!"
+        exit
+      end
     end
-
     current_guess
   end
 
@@ -68,22 +69,15 @@ class Player
     end
     duplicate
   end
-end
-
-class Game
-  attr_accessor :player, :board
-  def initialize
-    @player = Player.new
-    @board = Board.new
-  end
 
   def game_over_check
     game_over = false
-    if board.incorrect_guesses == 6
-      puts "You ran out of guesses. The word was #{board.secret_word}"
+    if incorrect_guesses == 6
+      puts "You ran out of guesses. The word was #{secret_word}"
+      puts "Thanks for playing!"
       game_over = true
-    elsif board.hint.join('') == board.secret_word
-      puts "You win!"
+    elsif hint.join('') == secret_word
+      puts "You win! Thanks for playing!"
       game_over = true
     end
     game_over
@@ -91,9 +85,9 @@ class Game
 
   def instructions
     puts "Welcome to hangman! Guess the letters, it's game over if you get 6 wrong letters."
-    puts "Also, type Save to save your game, or Load to load a game."
-    board.initial_hint
-    board.print
+    puts "Type save to save your game, or exit to quit."
+    initial_hint
+    print
   end
 
   def save_game
@@ -102,20 +96,29 @@ class Game
 
   def load_game
     yaml = YAML.safe_load_file('./saved_game.yml', permitted_classes: [Game])
+    @guess = yaml.guess
+    @guessed_letters = yaml.guessed_letters
+    @secret_word = yaml.secret_word
+    @hint = yaml.hint
+    @incorrect_guesses = yaml.incorrect_guesses
+    puts "Game loaded!"
+    print
   end
 
   def play
     instructions
-    
+    puts "Load a saved game? (y/n)"
+    load = gets.chomp
+    load_game if load == 'y'
     until game_over_check == true
-      puts "Letters guessed so far: #{player.guessed_letters}\n\n"
-      if player.duplicate_check(player.make_guess)
+      puts "Letters guessed so far: #{guessed_letters}\n\n"
+      if duplicate_check(make_guess)
         puts "Letter already guessed.\n\n"
-        board.print
+        print
         next
       end
-      board.guess_check(player.guess)
-      board.print
+      guess_check(guess)
+      print
     end
   end
 end
